@@ -195,7 +195,6 @@ int main() {
     execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/fornitore/fornitore");
     execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/trasportatore/trasportatore");
 
-
     //execProgram("../src/customer/customer");
     //execProgram("../src/fornitore/fornitore");
     //execProgram("../src/trasportatore/trasportatore");
