@@ -191,7 +191,7 @@ int main() {
 
     initializeStreams(c2r);
 
-    //execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/customer/customer");
+    execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/customer/customer");
     execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/fornitore/fornitore");
     execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/trasportatore/trasportatore");
 

@@ -61,7 +61,7 @@ void Customer::simulateOrder() {
         strcpy(prodotto,  "iphone");
         reply = RedisCommand(c2r, "XADD %s * %s %s", C_CHANNEL, fornitore, prodotto);
         assertReplyType(c2r, reply, REDIS_REPLY_STRING);
-        printf("main(): pid =%d: stream %s: Added %s -> %s (id: %s)\n", pid, F_CHANNEL, fornitore, prodotto, reply->str);
+        printf("main(): pid =%d: stream %s: Added %s -> %s (id: %s)\n", pid, C_CHANNEL, fornitore, prodotto, reply->str);
         freeReplyObject(reply);
 
         transitionToWaitingOrderConfirm();

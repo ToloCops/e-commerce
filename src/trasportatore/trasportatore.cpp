@@ -56,6 +56,7 @@ void Trasportatore::handleState() {
             break;
 
         case TrasportatoreState::InTransit:
+        std::cout << "In transit..." << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(2));
             std::cout << "Order delivered! Coming back..." << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(2));
