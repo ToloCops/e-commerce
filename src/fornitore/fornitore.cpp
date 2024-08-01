@@ -34,32 +34,33 @@ std::string Fornitore::stateToString(FornitoreState state) const {
 
 void Fornitore::transitionToWaitingForOrder() {
     state = FornitoreState::WaitingForOrder;
-    std::cout << "Transitioned to WaitingForOrder state." << std::endl;
+    //std::cout << "Transitioned to WaitingForOrder state." << std::endl;
 }
 
 void Fornitore::transitionToProcessingOrder() {
     state = FornitoreState::ProcessingOrder;
-    std::cout << "Transitioned to ProcessingOrder state." << std::endl;
+    //std::cout << "Transitioned to ProcessingOrder state." << std::endl;
 }
 
 void Fornitore::processOrder() {
-    std::cout << "Processing order..." << std::endl;
+    //std::cout << "Processing order..." << std::endl;
 }
 
 void Fornitore::handleState() {
     switch (state) {
         case FornitoreState::WaitingForOrder:
-            std::cout << "Waiting for order..." << std::endl;
+            //std::cout << "Fornitore" << username << " --> waiting for order..." << std::endl;
             reply = RedisCommand(c2r, "XREADGROUP GROUP %s %s BLOCK 10000 COUNT 10 NOACK STREAMS %s >", 
 			  username, username, C_CHANNEL);
             if (reply->type != 4) {
-                std::cout << "Order received!" << std::endl;
+                std::cout << "Fornitore" << username << " --> order received!\n" << std::endl;
                 transitionToProcessingOrder();
             }
             break;
 
         case FornitoreState::ProcessingOrder:
             reply = RedisCommand(c2r, "XADD %s * %s %s", T_CHANNEL, "consegna", "prodotto");
+            transitionToWaitingForOrder();
             break;
 
         default:

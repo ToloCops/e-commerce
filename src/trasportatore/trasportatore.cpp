@@ -31,36 +31,36 @@ std::string Trasportatore::stateToString(TrasportatoreState state) const {
 
 void Trasportatore::transitionToIdle() {
     state = TrasportatoreState::Idle;
-    std::cout << "Transitioned to Idle state." << std::endl;
+    //std::cout << "Transitioned to Idle state." << std::endl;
 }
 
 void Trasportatore::transitionToInTransit() {
     state = TrasportatoreState::InTransit;
-    std::cout << "Transitioned to InTransit state." << std::endl;
+    //std::cout << "Transitioned to InTransit state." << std::endl;
 }
 
 void Trasportatore::deliverOrder() {
-    std::cout << "Delivering order..." << std::endl;
+    //std::cout << "Delivering order..." << std::endl;
 }
 
 void Trasportatore::handleState() {
     switch (state) {
         case TrasportatoreState::Idle:
-            std::cout << "Waiting for order..." << std::endl;
+            //std::cout << "Waiting for order..." << std::endl;
             reply = RedisCommand(c2r, "XREADGROUP GROUP %s %s BLOCK 10000 COUNT 10 NOACK STREAMS %s >", 
 			  username, username, T_CHANNEL);
             if (reply->type != 4) {
-                std::cout << "Order received!" << std::endl;
+                std::cout << "Trasportatore " << username << " --> order received!\n" << std::endl;
                 transitionToInTransit();
             }
             break;
 
         case TrasportatoreState::InTransit:
-        std::cout << "In transit..." << std::endl;
+            //std::cout << "In transit..." << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(2));
-            std::cout << "Order delivered! Coming back..." << std::endl;
+            std::cout << "Trasportatore " << username << " --> order delivered! Coming back...\n" << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(2));
-            std::cout << "Back to the HQ." << std::endl;
+            std::cout << "Trasportatore " << username << " --> back to the HQ.\n" << std::endl;
             transitionToIdle();
             break;
 

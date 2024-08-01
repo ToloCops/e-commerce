@@ -32,17 +32,17 @@ std::string Customer::stateToString(CustomerState state) const {
 
 void Customer::transitionToIdle() {
     state = CustomerState::Idle;
-    std::cout << "Transitioned to Idle state." << std::endl;
+    //std::cout << "Transitioned to Idle state." << std::endl;
 }
 
 void Customer::transitionToWaitingOrderConfirm() {
     state = CustomerState::WaitingOrderConfirm;
-    std::cout << "Transitioned to WaitingOrderConfirm state." << std::endl;
+    //std::cout << "Transitioned to WaitingOrderConfirm state." << std::endl;
 }
 
 void Customer::transitionToWaitingForDelivery() {
     state = CustomerState::WaitingForDelivery;
-    std::cout << "Transitioned to WaitingForDelivery state." << std::endl;
+    //std::cout << "Transitioned to WaitingForDelivery state." << std::endl;
 }
 
 void Customer::simulateOrder() {
@@ -77,14 +77,15 @@ void Customer::handleState() {
             break;
 
         case CustomerState::WaitingOrderConfirm:
-            std::cout << "Waiting for order confirmation..." << std::endl;
+            std::cout << "Customer " << username << "--> waiting for order confirmation...\n" << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(2)); // Simula l'attesa
             transitionToWaitingForDelivery();
             break;
 
         case CustomerState::WaitingForDelivery:
-            std::cout << "Waiting for delivery..." << std::endl;
+            std::cout << "Customer " << username << " --> waiting for delivery...\n" << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(2)); // Simula l'attesa
+            std::cout << "Customer " << username << " --> product received!\n" << std::endl;
             // Simula ricezione della consegna
             transitionToIdle();
             break;
@@ -100,8 +101,8 @@ void Customer::run() {
     c2r = initializeRedisConnection(username, seed, pid);
     initGroup(c2r, C_CHANNEL, username);
     while (true) {
-        handleState();
         std::this_thread::sleep_for(std::chrono::seconds(1)); // Simula il passare del tempo
+        handleState();
     }
 }
 
