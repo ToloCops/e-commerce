@@ -25,10 +25,6 @@ private:
 
     //Attributes
     int trasportatore_id;
-    //std::string email;
-    //std::string password;
-    //std::string address;
-    //std::string phone_number;
     TrasportatoreState state;
 
     //Redis connection variables
@@ -51,25 +47,14 @@ private:
     //Status change
     void handleState();
 public:
-    //Trasportatore(int id, std::string e, std::string p, std::string a, std::string ph);
     Trasportatore(int id);
 
     // Getters
     int getTrasportatoreId() const;
-    //std::string getEmail() const;
-    //std::string getPassword() const;
-    //std::string getAddress() const;
-    //std::string getPhoneNumber() const;
-
-    // Setters
-    //void setEmail(const std::string& e);
-    //void setPassword(const std::string& p);
-    //void setAddress(const std::string& a);
-    //void setPhoneNumber(const std::string& ph);
+    std::string getState() const;
 
     void run();
 
-    std::string getState() const;
 };
 
 #endif // TRASPORTATORE_H
