@@ -4,22 +4,24 @@
 
 #define T_CHANNEL "stream2"
 
-Trasportatore::Trasportatore(int id, std::string e, std::string p, std::string a, std::string ph)
-    : trasportatore_id(id), email(e), password(p), address(a), phone_number(ph), state(TrasportatoreState::Idle){}
+//Trasportatore::Trasportatore(int id, std::string e, std::string p, std::string a, std::string ph)
+//    : trasportatore_id(id), email(e), password(p), address(a), phone_number(ph), state(TrasportatoreState::Idle){}
+
+Trasportatore::Trasportatore(int id) : trasportatore_id(id) {}
 
 // Getters
 int Trasportatore::getTrasportatoreId() const { return trasportatore_id; }
-std::string Trasportatore::getEmail() const { return email; }
-std::string Trasportatore::getPassword() const { return password; }
-std::string Trasportatore::getAddress() const { return address; }
-std::string Trasportatore::getPhoneNumber() const { return phone_number; }
+//std::string Trasportatore::getEmail() const { return email; }
+//std::string Trasportatore::getPassword() const { return password; }
+//std::string Trasportatore::getAddress() const { return address; }
+//std::string Trasportatore::getPhoneNumber() const { return phone_number; }
 std::string Trasportatore::getState() const { return stateToString(state); }
 
 // Setters
-void Trasportatore::setEmail(const std::string& e) { email = e; }
-void Trasportatore::setPassword(const std::string& p) { password = p; }
-void Trasportatore::setAddress(const std::string& a) { address = a; }
-void Trasportatore::setPhoneNumber(const std::string& ph) { phone_number = ph; }
+//void Trasportatore::setEmail(const std::string& e) { email = e; }
+//void Trasportatore::setPassword(const std::string& p) { password = p; }
+//void Trasportatore::setAddress(const std::string& a) { address = a; }
+//void Trasportatore::setPhoneNumber(const std::string& ph) { phone_number = ph; }
 
 std::string Trasportatore::stateToString(TrasportatoreState state) const {
     switch (state) {
@@ -82,7 +84,7 @@ void Trasportatore::run() {
 }
 
 int main() {
-    Trasportatore trasportatore(1, "ciao@gmail.com", "1234", "5678", "543545242");
+    Trasportatore trasportatore(1);
     trasportatore.run();
     return 0;
 }
