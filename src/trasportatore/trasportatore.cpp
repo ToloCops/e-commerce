@@ -73,6 +73,7 @@ void Trasportatore::handleState() {
 void Trasportatore::run() {
     std::cout << "Hello word from Trasportatore"  << std::endl;
     c2r = initializeRedisConnection(username, seed, pid);
+    strcpy(username, "543453");
     initGroup(c2r, T_CHANNEL, username);
     while (true) {
         handleState();

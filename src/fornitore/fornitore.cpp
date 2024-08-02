@@ -53,7 +53,7 @@ void Fornitore::handleState() {
             reply = RedisCommand(c2r, "XREADGROUP GROUP %s %s BLOCK 10000 COUNT 10 NOACK STREAMS %s >", 
 			  username, username, C_CHANNEL);
             if (reply->type != 4) {
-                std::cout << "Fornitore" << username << " --> order received!\n" << std::endl;
+                std::cout << "Fornitore " << username << " --> order received!\n" << std::endl;
                 transitionToProcessingOrder();
             }
             break;

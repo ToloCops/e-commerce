@@ -6,6 +6,7 @@
 #include "redis_helper.h"
 
 #include <string>
+#include <cstring>
 #include <stdio.h>
 #include <iostream>
 #include <chrono>
