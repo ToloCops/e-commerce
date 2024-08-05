@@ -66,7 +66,9 @@ void Trasportatore::run() {
 }
 
 int main() {
-    Trasportatore trasportatore(1);
-    trasportatore.run();
+    Trasportatore trasportatore1(1);
+    Trasportatore trasportatore2(2);
+    trasportatore1.run();
+    trasportatore2.run();
     return 0;
 }
