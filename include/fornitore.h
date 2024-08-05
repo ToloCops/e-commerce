@@ -25,10 +25,6 @@ private:
     //Attributes
     int fornitore_id;
     std::string company_name;
-    std::string email;
-    std::string password;
-    std::string address;
-    std::string phone_number;
     FornitoreState state;
 
     //Redis connection variables
@@ -56,17 +52,9 @@ public:
     // Getters
     int getFornitoreId() const;
     std::string getCompany() const;
-    std::string getEmail() const;
-    std::string getPassword() const;
-    std::string getAddress() const;
-    std::string getPhoneNumber() const;
 
     // Setters
     void setCompany(const std::string& n);
-    void setEmail(const std::string& e);
-    void setPassword(const std::string& p);
-    void setAddress(const std::string& a);
-    void setPhoneNumber(const std::string& ph);
 
     void run();
 

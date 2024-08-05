@@ -29,10 +29,6 @@ private:
     //Attributes
     int customer_id;
     std::string name;
-    std::string email;
-    std::string password;
-    std::string address;
-    std::string phone_number;
     CustomerState state;
 
     //Probability of order generation
@@ -65,17 +61,9 @@ public:
     // Getters
     int getCustomerId() const;
     std::string getName() const;
-    std::string getEmail() const;
-    std::string getPassword() const;
-    std::string getAddress() const;
-    std::string getPhoneNumber() const;
 
     // Setters
     void setName(const std::string& n);
-    void setEmail(const std::string& e);
-    void setPassword(const std::string& p);
-    void setAddress(const std::string& a);
-    void setPhoneNumber(const std::string& ph);
 
     void run();
 

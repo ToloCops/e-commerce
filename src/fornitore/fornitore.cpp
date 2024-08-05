@@ -6,23 +6,14 @@
 #define T_CHANNEL "stream2"
 
 Fornitore::Fornitore(int id, std::string cn, std::string e, std::string p, std::string a, std::string ph)
-    : fornitore_id(id), company_name(cn), email(e), password(p), address(a), phone_number(ph), state(FornitoreState::WaitingForOrder) {}
+    : fornitore_id(id), company_name(cn), state(FornitoreState::WaitingForOrder) {}
 
 // Getters
 int Fornitore::getFornitoreId() const { return fornitore_id; }
 std::string Fornitore::getCompany() const { return company_name; }
-std::string Fornitore::getEmail() const { return email; }
-std::string Fornitore::getPassword() const { return password; }
-std::string Fornitore::getAddress() const { return address; }
-std::string Fornitore::getPhoneNumber() const { return phone_number; }
-std::string Fornitore::getState() const { return stateToString(state); }
 
 // Setters
 void Fornitore::setCompany(const std::string& n) { company_name = n; }
-void Fornitore::setEmail(const std::string& e) { email = e; }
-void Fornitore::setPassword(const std::string& p) { password = p; }
-void Fornitore::setAddress(const std::string& a) { address = a; }
-void Fornitore::setPhoneNumber(const std::string& ph) { phone_number = ph; }
 
 std::string Fornitore::stateToString(FornitoreState state) const {
     switch (state) {
@@ -81,7 +72,9 @@ void Fornitore::run() {
 }
 
 int main() {
-    Fornitore fornitore(1, "Apple", "support@apple.com", "1234", "5678", "39432");
-    fornitore.run();
+    Fornitore apple(1, "Apple");
+    Fornitore samsung(2, "Samsung");
+    apple.run();
+    samsung.run();
     return 0;
 }

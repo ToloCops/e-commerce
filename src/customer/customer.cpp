@@ -8,18 +8,10 @@ Customer::Customer(int id, std::string n, std::string e, std::string p, std::str
 // Getters
 int Customer::getCustomerId() const { return customer_id; }
 std::string Customer::getName() const { return name; }
-std::string Customer::getEmail() const { return email; }
-std::string Customer::getPassword() const { return password; }
-std::string Customer::getAddress() const { return address; }
-std::string Customer::getPhoneNumber() const { return phone_number; }
 std::string Customer::getState() const { return stateToString(state); }
 
 // Setters
 void Customer::setName(const std::string& n) { name = n; }
-void Customer::setEmail(const std::string& e) { email = e; }
-void Customer::setPassword(const std::string& p) { password = p; }
-void Customer::setAddress(const std::string& a) { address = a; }
-void Customer::setPhoneNumber(const std::string& ph) { phone_number = ph; }
 
 std::string Customer::stateToString(CustomerState state) const {
     switch (state) {
@@ -107,7 +99,7 @@ void Customer::run() {
 }
 
 int main() {
-    Customer customer(1, "John Doe", "john@example.com", "password123", "123 Main St", "555-1234");
+    Customer customer(1, "John Doe");
     customer.run();
     return 0;
 }
