@@ -42,7 +42,8 @@ private:
     void transitionToProcessingOrder();
 
     //Order processing
-    void processOrder();
+    void parseCustomerMessage(redisReply *reply);
+    void processOrder(char *product, char *user);
 
     //Status change
     void handleState();

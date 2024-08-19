@@ -33,8 +33,60 @@ void Fornitore::transitionToProcessingOrder() {
     //std::cout << "Transitioned to ProcessingOrder state." << std::endl;
 }
 
-void Fornitore::processOrder() {
-    //std::cout << "Processing order..." << std::endl;
+void Fornitore::parseCustomerMessage(redisReply *reply) {
+    char *product;
+    char *user;
+    if (reply->type == REDIS_REPLY_ARRAY) {
+        for (size_t i = 0; i < reply->elements; i++) {
+            redisReply *stream = reply->element[i];
+
+            // Ogni stream dovrebbe avere un nome (prima parte) e un array di elementi (seconda parte)
+            if (stream->type == REDIS_REPLY_ARRAY && stream->elements == 2) {
+                redisReply *stream_name = stream->element[0];
+                redisReply *entries = stream->element[1];
+
+                printf("Stream: %s\n", stream_name->str);
+
+                // Ogni entry nello stream
+                for (size_t j = 0; j < entries->elements; j++) {
+                    redisReply *entry = entries->element[j];
+
+                    if (entry->type == REDIS_REPLY_ARRAY && entry->elements == 2) {
+                        redisReply *entry_id = entry->element[0];
+                        redisReply *fields = entry->element[1];
+
+                        printf("Entry ID: %s\n", entry_id->str);
+
+                        // Stampiamo le coppie chiave-valore
+                        for (size_t k = 0; k < fields->elements; k += 2) {
+                            redisReply *key = fields->element[k];
+                            redisReply *value = fields->element[k + 1];
+
+                            if (k == 2) {
+                                product = value->str;
+                            }
+                            else if (k == 4) {
+                                user = value -> str;
+                            }
+                            
+                            if (user != NULL && user[0] != '\0') {
+                                processOrder(product, user);
+                            }
+
+                            printf("%s: %s\n", key->str, value->str);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void Fornitore::processOrder(char *product, char *user) {
+    printf("Processing order for user: %s, product: %s\n", user, product);
+    //TODO remove item from available products
+    //TODO notify trasportatore
+    //TODO notify customer
 }
 
 void Fornitore::handleState() {
@@ -45,6 +97,7 @@ void Fornitore::handleState() {
 			  username, username, C_CHANNEL);
             if (reply->type != 4) {
                 std::cout << "Fornitore " << username << " --> order received!\n" << std::endl;
+                parseCustomerMessage(reply);
                 transitionToProcessingOrder();
             }
             break;
