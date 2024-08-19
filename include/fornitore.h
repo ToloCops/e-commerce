@@ -47,7 +47,7 @@ private:
     //Status change
     void handleState();
 public:
-    Fornitore(int id, std::string cn, std::string e, std::string p, std::string a, std::string ph);
+    Fornitore(int id, std::string cn);
 
     // Getters
     int getFornitoreId() const;

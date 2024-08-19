@@ -56,7 +56,7 @@ private:
     //Status change
     void handleState();
 public:
-    Customer(int id, std::string n, std::string e, std::string p, std::string a, std::string ph);
+    Customer(int id, std::string n);
 
     // Getters
     int getCustomerId() const;

@@ -5,7 +5,7 @@
 #define C_CHANNEL "stream1"
 #define T_CHANNEL "stream2"
 
-Fornitore::Fornitore(int id, std::string cn, std::string e, std::string p, std::string a, std::string ph)
+Fornitore::Fornitore(int id, std::string cn)
     : fornitore_id(id), company_name(cn), state(FornitoreState::WaitingForOrder) {}
 
 // Getters
