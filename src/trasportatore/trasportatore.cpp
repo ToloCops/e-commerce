@@ -26,6 +26,46 @@ void Trasportatore::transitionToInTransit() {
     state = TrasportatoreState::InTransit;
 }
 
+void Trasportatore::parseFornitoreMessage(redisReply *reply) {
+    if (reply->type == REDIS_REPLY_ARRAY) {
+        for (size_t i = 0; i < reply->elements; i++) {
+            redisReply *stream = reply->element[i];
+
+            // Ogni stream dovrebbe avere un nome (prima parte) e un array di elementi (seconda parte)
+            if (stream->type == REDIS_REPLY_ARRAY && stream->elements == 2) {
+                redisReply *stream_name = stream->element[0];
+                redisReply *entries = stream->element[1];
+
+                printf("Stream: %s\n", stream_name->str);
+
+                // Ogni entry nello stream
+                for (size_t j = 0; j < entries->elements; j++) {
+                    redisReply *entry = entries->element[j];
+
+                    if (entry->type == REDIS_REPLY_ARRAY && entry->elements == 2) {
+                        redisReply *entry_id = entry->element[0];
+                        redisReply *fields = entry->element[1];
+
+                        printf("Entry ID: %s\n", entry_id->str);
+
+                        // Stampiamo le coppie chiave-valore
+                        for (size_t k = 0; k < fields->elements; k += 2) {
+                            redisReply *key = fields->element[k];
+                            redisReply *value = fields->element[k + 1];
+
+                            if (value->str != NULL && (value->str)[0] != '\0') {
+                                customer = value->str;
+                            }
+
+                            printf("%s: %s\n", key->str, value->str);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 void Trasportatore::deliverOrder() {
 }
 
@@ -35,7 +75,8 @@ void Trasportatore::handleState() {
             reply = RedisCommand(c2r, "XREADGROUP GROUP %s %s BLOCK 10000 COUNT 10 NOACK STREAMS %s >", 
 			  username, username, T_CHANNEL);
             if (reply->type != 4) {
-                std::cout << "Trasportatore " << username << " --> order received!\n" << std::endl;
+                parseFornitoreMessage(reply);
+                std::cout << "Trasportatore " << username << " --> order received! Deliver to user: " << customer << "\n"<< std::endl;
                 transitionToInTransit();
             }
             break;

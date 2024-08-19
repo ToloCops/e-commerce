@@ -26,6 +26,7 @@ private:
     //Attributes
     int trasportatore_id;
     TrasportatoreState state;
+    char *customer;
 
     //Redis connection variables
     redisContext *c2r;
@@ -40,6 +41,8 @@ private:
     //Transition functions
     void transitionToIdle();
     void transitionToInTransit();
+
+    void parseFornitoreMessage(redisReply *reply);
 
     //Notify delivery
     void deliverOrder();

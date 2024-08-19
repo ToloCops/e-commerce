@@ -86,7 +86,9 @@ void Fornitore::processOrder(char *product, char *user) {
     printf("Processing order for user: %s, product: %s\n", user, product);
     //TODO remove item from available products
     //TODO notify trasportatore
+    reply = RedisCommand(c2r, "XADD %s * utente %s", T_CHANNEL, user);
     //TODO notify customer
+    reply = RedisCommand(c2r, "XADD %s * utente %s stato CONFIRMED", C_CHANNEL, user);
 }
 
 void Fornitore::handleState() {
@@ -97,13 +99,12 @@ void Fornitore::handleState() {
 			  username, username, C_CHANNEL);
             if (reply->type != 4) {
                 std::cout << "Fornitore " << username << " --> order received!\n" << std::endl;
-                parseCustomerMessage(reply);
                 transitionToProcessingOrder();
+                parseCustomerMessage(reply);
             }
             break;
 
         case FornitoreState::ProcessingOrder:
-            reply = RedisCommand(c2r, "XADD %s * %s %s", T_CHANNEL, "consegna", "prodotto");
             transitionToWaitingForOrder();
             break;
 
