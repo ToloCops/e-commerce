@@ -50,6 +50,8 @@ private:
     void transitionToWaitingOrderConfirm();
     void transitionToWaitingForDelivery();
 
+    void parseMessage(redisReply *redis); //Parses messages from fornitori or trasportatori to update order status
+    
     //Order generation
     void simulateOrder();
 
