@@ -14,9 +14,9 @@
 #include <ctime>
 #include <errno.h>
 
-#define F_CHANNEL "stream1"
+#define C_CHANNEL "stream1"
 #define T_CHANNEL "stream2"
-#define C_CHANNEL "stream3"
+#define F_CHANNEL "stream3"
 
 redisContext* initializeRedisConnection(char*& username, unsigned &seed, int &pid) {
 

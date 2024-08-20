@@ -3,6 +3,7 @@
 #include "trasportatore.h"
 
 #define T_CHANNEL "stream2"
+#define F_CHANNEL "stream3"
 
 Trasportatore::Trasportatore(int id) : trasportatore_id(id) {}
 

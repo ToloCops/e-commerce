@@ -4,6 +4,7 @@
 
 #define C_CHANNEL "stream1"
 #define T_CHANNEL "stream2"
+#define F_CHANNEL "stream3"
 
 Fornitore::Fornitore(int id, std::string cn)
     : fornitore_id(id), company_name(cn), state(FornitoreState::WaitingForOrder) {}
@@ -96,7 +97,7 @@ void Fornitore::handleState() {
         case FornitoreState::WaitingForOrder:
             //std::cout << "Fornitore" << username << " --> waiting for order..." << std::endl;
             reply = RedisCommand(c2r, "XREADGROUP GROUP %s %s BLOCK 10000 COUNT 10 NOACK STREAMS %s >", 
-			  username, username, C_CHANNEL);
+			  username, username, F_CHANNEL);
             if (reply->type != 4) {
                 std::cout << "Fornitore " << username << " --> order received!\n" << std::endl;
                 transitionToProcessingOrder();
@@ -117,8 +118,7 @@ void Fornitore::handleState() {
 void Fornitore::run() {
     std::cout << "Hello word from " << getCompany() << std::endl;
     c2r = initializeRedisConnection(username, seed, pid);
-    initGroup(c2r, C_CHANNEL, username);
-    initGroup(c2r, T_CHANNEL, username);
+    initGroup(c2r, F_CHANNEL, username);
     while (true) {
         handleState();
         std::this_thread::sleep_for(std::chrono::seconds(1)); // Simula il passare del tempo

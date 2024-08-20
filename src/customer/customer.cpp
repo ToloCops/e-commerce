@@ -1,6 +1,8 @@
 #include "customer.h"
 
 #define C_CHANNEL "stream1"
+#define F_CHANNEL "stream3"
+
 
 Customer::Customer(int id, std::string n)
     : customer_id(id), name(n), state(CustomerState::Idle) {}
@@ -51,9 +53,9 @@ void Customer::simulateOrder() {
         char prodotto[100];
         strcpy(fornitore, "apple");
         strcpy(prodotto,  "iphone");
-        reply = RedisCommand(c2r, "XADD %s * fornitore %s prodotto %s utente %s", C_CHANNEL, fornitore, prodotto, username);
+        reply = RedisCommand(c2r, "XADD %s * fornitore %s prodotto %s utente %s", F_CHANNEL, fornitore, prodotto, username);
         assertReplyType(c2r, reply, REDIS_REPLY_STRING);
-        printf("main(): pid =%d: stream %s: Added fornitore -> %s prodotto -> %s utente -> %s (id: %s)\n", pid, C_CHANNEL, fornitore, prodotto, username, reply->str);
+        printf("main(): pid =%d: stream %s: Added fornitore -> %s prodotto -> %s utente -> %s (id: %s)\n", pid, F_CHANNEL, fornitore, prodotto, username, reply->str);
         freeReplyObject(reply);
 
         transitionToWaitingOrderConfirm();
