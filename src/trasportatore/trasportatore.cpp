@@ -2,6 +2,7 @@
 
 #include "trasportatore.h"
 
+#define C_CHANNEL "stream1"
 #define T_CHANNEL "stream2"
 #define F_CHANNEL "stream3"
 
@@ -84,6 +85,7 @@ void Trasportatore::handleState() {
 
         case TrasportatoreState::InTransit:
             std::this_thread::sleep_for(std::chrono::seconds(2));
+            reply = RedisCommand(c2r, "XADD %s * utente %s stato DELIVERED", C_CHANNEL, customer);                      //notifies customer
             std::cout << "Trasportatore " << username << " --> order delivered! Coming back...\n" << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(2));
             std::cout << "Trasportatore " << username << " --> back to the HQ.\n" << std::endl;

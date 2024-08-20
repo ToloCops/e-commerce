@@ -39,8 +39,7 @@ void Customer::transitionToWaitingForDelivery() {
     //std::cout << "Transitioned to WaitingForDelivery state." << std::endl;
 }
 
-void parseMessage(redisReply *reply) {
-    char *user;
+void Customer::parseMessage(redisReply *reply) {
     if (reply->type == REDIS_REPLY_ARRAY) {
         for (size_t i = 0; i < reply->elements; i++) {
             redisReply *stream = reply->element[i];
@@ -67,15 +66,20 @@ void parseMessage(redisReply *reply) {
                             redisReply *key = fields->element[k];
                             redisReply *value = fields->element[k + 1];
 
-                            if (k == 2) {
-                                product = value->str;
+                            if (k == 0) {
+                                if (strcmp(value->str, username) != 0) {
+                                    break;
+                                }
                             }
-                            else if (k == 4) {
-                                user = value -> str;
-                            }
-                            
-                            if (user != NULL && user[0] != '\0') {
-                                processOrder(product, user);
+                            else if (k == 2) {
+                                if (strcmp(value->str, "CONFIRMED") == 0) 
+                                {
+                                    transitionToWaitingForDelivery();
+                                }
+                                else if (strcmp(value->str, "DELIVERED") == 0) 
+                                {
+                                    transitionToIdle();
+                                }
                             }
 
                             printf("%s: %s\n", key->str, value->str);
@@ -122,7 +126,6 @@ void Customer::handleState() {
             if (reply->type != 4) {
                 parseMessage(reply);
                 std::cout << "Customer " << username << " --> order CONFIRMED!\n" << std::endl;
-                transitionToWaitingForDelivery();
             }
             else {
                 std::cout << "Customer " << username << "--> waiting for order confirmation...\n" << std::endl;
@@ -131,11 +134,16 @@ void Customer::handleState() {
             break;
 
         case CustomerState::WaitingForDelivery:
-            std::cout << "Customer " << username << " --> waiting for delivery...\n" << std::endl;
-            std::this_thread::sleep_for(std::chrono::seconds(2)); // Simula l'attesa
-            std::cout << "Customer " << username << " --> product received!\n" << std::endl;
-            // Simula ricezione della consegna
-            transitionToIdle();
+            reply = RedisCommand(c2r, "XREADGROUP GROUP %s %s BLOCK 10000 COUNT 10 NOACK STREAMS %s >", 
+			  username, username, C_CHANNEL);
+            if (reply->type != 4) {
+                parseMessage(reply);
+                std::cout << "Customer " << username << " --> product RECEIVED!\n" << std::endl;
+            }
+            else {
+                std::cout << "Customer " << username << " --> waiting for delivery...\n" << std::endl;
+                std::this_thread::sleep_for(std::chrono::seconds(2));                                               // Simula l'attesa
+            }
             break;
 
         default:
