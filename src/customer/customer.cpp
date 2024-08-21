@@ -26,17 +26,14 @@ std::string Customer::stateToString(CustomerState state) const {
 
 void Customer::transitionToIdle() {
     state = CustomerState::Idle;
-    //std::cout << "Transitioned to Idle state." << std::endl;
 }
 
 void Customer::transitionToWaitingOrderConfirm() {
     state = CustomerState::WaitingOrderConfirm;
-    //std::cout << "Transitioned to WaitingOrderConfirm state." << std::endl;
 }
 
 void Customer::transitionToWaitingForDelivery() {
     state = CustomerState::WaitingForDelivery;
-    //std::cout << "Transitioned to WaitingForDelivery state." << std::endl;
 }
 
 bool Customer::parseMessage(redisReply *reply) {
@@ -70,7 +67,7 @@ bool Customer::parseMessage(redisReply *reply) {
 
                             if (k == 0) 
                             {
-                                if (strcmp(value->str, username) != 0)                                               // Controlla che il messaggio fosse per lui
+                                if (strcmp(value->str, username) != 0)                                              // Controlla che il messaggio fosse per lui
                                 {
                                     break;
                                 }
@@ -79,14 +76,16 @@ bool Customer::parseMessage(redisReply *reply) {
                                     for_me = true;
                                 }
                             }
-                            else if (k == 2)                                                                         // Aggiorna lo stato dell'ordine
+                            else if (k == 2)                                                                        // Aggiorna lo stato dell'ordine
                             {
                                 if (strcmp(value->str, "CONFIRMED") == 0) 
                                 {
+                                    std::cout << "Customer " << username << " --> order CONFIRMED!\n" << std::endl;
                                     transitionToWaitingForDelivery();
                                 }
                                 else if (strcmp(value->str, "DELIVERED") == 0) 
                                 {
+                                    std::cout << "Customer " << username << " --> product RECEIVED!\n" << std::endl;
                                     transitionToIdle();
                                 }
                             }
@@ -102,7 +101,7 @@ bool Customer::parseMessage(redisReply *reply) {
 }
 
 void Customer::simulateOrder() {
-    if (dist(rng) < 0.5) { // 50% di probabilità di effettuare un ordine
+    if (dist(rng) < 0.5) {                                                                                          // 50% di probabilità di effettuare un ordine
         //TODO
         //Richiesta al server dei prodotti disponibili
 
@@ -136,44 +135,20 @@ void Customer::handleState()
         case CustomerState::WaitingOrderConfirm:
             reply = RedisCommand(c2r, "XREADGROUP GROUP %s %s BLOCK 10000 COUNT 10 NOACK STREAMS %s >",             // Interroga lo stream dei customer per ricevere nuovi messaggi
 			                        username, username, C_CHANNEL);
-            if (reply->type != 4) 
-            {                                                                                 // Controlla se ha avuto risposta
-                if (parseMessage(reply))                                                                            // Parsa il messaggio e controlla che fosse per lui
-                {
-                    std::cout << "Customer " << username << " --> order CONFIRMED!\n" << std::endl;
-                }
-                else 
-                {
-                    std::cout << "Customer " << username << "--> waiting for order confirmation...\n" << std::endl;
-                    std::this_thread::sleep_for(std::chrono::seconds(2)); 
-                }
-            }
-            else 
-            {
+            if (reply->type == 4 || !parseMessage(reply))                                                           // Controlla se ha avuto risposta e che il messaggio fosse per lui
+            {                                                                                                       
                 std::cout << "Customer " << username << "--> waiting for order confirmation...\n" << std::endl;
-                std::this_thread::sleep_for(std::chrono::seconds(2));                                              
+                std::this_thread::sleep_for(std::chrono::seconds(2));  
             }
             break;
 
         case CustomerState::WaitingForDelivery:
             reply = RedisCommand(c2r, "XREADGROUP GROUP %s %s BLOCK 10000 COUNT 10 NOACK STREAMS %s >", 
 			                        username, username, C_CHANNEL);
-            if (reply->type != 4) 
-            {
-                if (parseMessage(reply)) 
-                {
-                    std::cout << "Customer " << username << " --> product RECEIVED!\n" << std::endl;
-                }
-                else 
-                {
-                    std::cout << "Customer " << username << " --> waiting for delivery...\n" << std::endl;
-                    std::this_thread::sleep_for(std::chrono::seconds(2));
-                }
-            }
-            else 
+            if (reply->type == 4 || !parseMessage(reply)) 
             {
                 std::cout << "Customer " << username << " --> waiting for delivery...\n" << std::endl;
-                std::this_thread::sleep_for(std::chrono::seconds(2));                                    
+                std::this_thread::sleep_for(std::chrono::seconds(2));
             }
             break;
 
