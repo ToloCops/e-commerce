@@ -136,8 +136,16 @@ void Fornitore::run() {
     }
 }
 
-int main() {
-    Fornitore apple(1, "apple");
-    apple.run();
+int main(int argc, char* argv[]) {
+    // Verifica se è stato passato un argomento
+    if (argc < 2) {
+        std::cerr << "Errore: nessun nome di fornitore passato." << std::endl;
+        return 1;
+    }
+
+    // Il nome del fornitore è il primo argomento passato
+    std::string nomeFornitore = argv[1];
+    Fornitore fornitore(1, nomeFornitore);
+    fornitore.run();
     return 0;
 }

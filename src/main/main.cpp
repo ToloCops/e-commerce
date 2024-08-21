@@ -77,11 +77,11 @@ void initializeStreams(redisContext* c2r) {
     initStreams(c2r, C_CHANNEL);
 }
 
-void execProgram(const char* program) {
+void execProgram(const char* program, const char* arg) {
     pid_t pid = fork();
     if(pid == 0) {
         // Processo figlio
-        execl(program, program, (char*) NULL);
+        execl(program, program, arg, (char*) NULL);
         // Se execl fallisce
         std::cerr << "Errore durante l'esecuzione di " << program << std::endl;
         std::cerr << "Fork failed: " << strerror(errno) << std::endl;
@@ -191,9 +191,10 @@ int main() {
 
     initializeStreams(c2r);
 
-    execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/customer/customer");
-    execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/fornitore/fornitore");
-    execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/trasportatore/trasportatore");
+    execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/customer/customer","");
+    execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/fornitore/fornitore", "apple");
+    execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/fornitore/fornitore", "samsung");
+    execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/trasportatore/trasportatore","");
 
     //execProgram("../src/customer/customer");
     //execProgram("../src/fornitore/fornitore");
