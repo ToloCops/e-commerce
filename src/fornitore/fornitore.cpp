@@ -34,9 +34,11 @@ void Fornitore::transitionToProcessingOrder() {
     //std::cout << "Transitioned to ProcessingOrder state." << std::endl;
 }
 
-void Fornitore::parseCustomerMessage(redisReply *reply) {
+bool Fornitore::parseCustomerMessage(redisReply *reply) {
+    std::cout << reply->type << std::endl;
     char *product;
-    char *user;
+    char *user = nullptr;
+    bool for_me;
     if (reply->type == REDIS_REPLY_ARRAY) {
         for (size_t i = 0; i < reply->elements; i++) {
             redisReply *stream = reply->element[i];
@@ -62,7 +64,17 @@ void Fornitore::parseCustomerMessage(redisReply *reply) {
                         for (size_t k = 0; k < fields->elements; k += 2) {
                             redisReply *key = fields->element[k];
                             redisReply *value = fields->element[k + 1];
-
+                            if (k == 0) 
+                            {
+                                if (strcmp(company_name.c_str(), value->str) != 0)                                              // Controlla che il messaggio fosse per lui
+                                {
+                                    break;
+                                }
+                                else 
+                                {
+                                    for_me = true;
+                                }
+                            }
                             if (k == 2) {
                                 product = value->str;
                             }
@@ -81,9 +93,11 @@ void Fornitore::parseCustomerMessage(redisReply *reply) {
             }
         }
     }
+    return for_me;
 }
 
 void Fornitore::processOrder(char *product, char *user) {
+    transitionToProcessingOrder();
     printf("Processing order for user: %s, product: %s\n", user, product);
     //TODO remove item from available products
 
@@ -96,10 +110,9 @@ void Fornitore::handleState() {
         case FornitoreState::WaitingForOrder:
             reply = RedisCommand(c2r, "XREADGROUP GROUP %s %s BLOCK 10000 COUNT 10 NOACK STREAMS %s >", 
 			  username, username, F_CHANNEL);
-            if (reply->type != 4) {
-                std::cout << "Fornitore " << username << " --> order received!\n" << std::endl;
-                transitionToProcessingOrder();
-                parseCustomerMessage(reply);
+            if (!parseCustomerMessage(reply)) {
+                std::cout << "Fornitore " << username << " --> waiting for order...\n" << std::endl;
+                std::this_thread::sleep_for(std::chrono::seconds(2));
             }
             break;
 
@@ -124,9 +137,7 @@ void Fornitore::run() {
 }
 
 int main() {
-    Fornitore apple(1, "Apple");
-    Fornitore samsung(2, "Samsung");
+    Fornitore apple(1, "apple");
     apple.run();
-    samsung.run();
     return 0;
 }
