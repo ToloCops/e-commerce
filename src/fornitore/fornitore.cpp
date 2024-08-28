@@ -35,7 +35,6 @@ void Fornitore::transitionToProcessingOrder() {
 }
 
 bool Fornitore::parseCustomerMessage(redisReply *reply) {
-    std::cout << reply->type << std::endl;
     char *product;
     char *user = nullptr;
     bool for_me;
