@@ -103,7 +103,7 @@ bool Customer::parseMessage(redisReply *reply) {
 void Customer::simulateOrder() {
     if (dist(rng) < 0.5) {                                                                                          // 50% di probabilità di effettuare un ordine
         //TODO
-        //Richiesta al server dei prodotti disponibili
+        //Richiesta al db dei prodotti disponibili
 
         //TODO
         //Scelta di un prodotto randomico
@@ -162,6 +162,7 @@ void Customer::run() {
     std::cout << "Hello word from " << getName() << std::endl;
     c2r = initializeRedisConnection(username, seed, pid);
     initGroup(c2r, C_CHANNEL, username);
+    Con2DB db("localhost", "5432", "postgres", "postgres", "backend");
     while (true) {
         std::this_thread::sleep_for(std::chrono::seconds(1)); // Simula il passare del tempo
         handleState();

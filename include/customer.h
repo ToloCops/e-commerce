@@ -4,6 +4,7 @@
 #define CUSTOMER_H
 
 #include "redis_helper.h"
+#include "../../con2db/pgsql.h"
 
 #include <string>
 #include <stdio.h>
@@ -14,7 +15,7 @@
 #include <hiredis/hiredis.h>
 #include <con2redis.h>
 #include <unistd.h>
-#include <cstring>
+#include <cstring> 
 
 class Customer {
 private:
