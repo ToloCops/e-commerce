@@ -3,6 +3,7 @@
 #define C_CHANNEL "stream1"
 #define F_CHANNEL "stream3"
 
+Con2DB db("localhost", "5432", "postgres", "postgres", "backend");
 
 Customer::Customer(int id, std::string n)
     : customer_id(id), name(n), state(CustomerState::Idle) {}
@@ -100,6 +101,33 @@ bool Customer::parseMessage(redisReply *reply) {
     return for_me;
 }
 
+void Customer::getAvailableProducts() {
+
+    PGresult *res;
+    int rows;
+    char sqlcmd[1000];
+
+    sprintf(sqlcmd, "BEGIN");
+    res = db.ExecSQLcmd(sqlcmd);
+    PQclear(res);
+
+    sprintf(sqlcmd, "SELECT * FROM availableproducts");
+    res = db.ExecSQLcmd(sqlcmd);
+
+    fprintf(stderr, "Products available: (%s, %s, %d)\n",
+        PQgetvalue(res, 1, PQfnumber(res, "p_name")),
+        PQgetvalue(res, 1, PQfnumber(res, "fornitore")),
+        atoi(PQgetvalue(res, 1, PQfnumber(res, "quantity")))
+        );
+
+    PQclear(res);
+
+    sprintf(sqlcmd, "COMMIT");
+    res = db.ExecSQLcmd(sqlcmd);
+    PQclear(res);
+
+}
+
 void Customer::simulateOrder() {
     if (dist(rng) < 0.5) {                                                                                          // 50% di probabilità di effettuare un ordine
         //TODO
@@ -158,11 +186,33 @@ void Customer::handleState()
     }
 }
 
+void testDBConnection() {
+    
+    PGresult *res;
+    char sqlcmd[1000];
+
+    sprintf(sqlcmd, "BEGIN");
+    res = db.ExecSQLcmd(sqlcmd);
+    PQclear(res);
+
+    sprintf(sqlcmd, "INSERT INTO availableproducts VALUES ('iphone', 'apple', 3) ON CONFLICT DO NOTHING");
+    res = db.ExecSQLcmd(sqlcmd);
+    PQclear(res);
+
+    sprintf(sqlcmd, "COMMIT");
+    res = db.ExecSQLcmd(sqlcmd);
+    PQclear(res);
+    
+}
+
+
+
 void Customer::run() {
     std::cout << "Hello word from " << getName() << std::endl;
     c2r = initializeRedisConnection(username, seed, pid);
     initGroup(c2r, C_CHANNEL, username);
-    Con2DB db("localhost", "5432", "postgres", "postgres", "backend");
+    //testDBConnection();
+    getAvailableProducts();
     while (true) {
         std::this_thread::sleep_for(std::chrono::seconds(1)); // Simula il passare del tempo
         handleState();
