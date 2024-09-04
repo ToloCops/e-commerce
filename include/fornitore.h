@@ -4,6 +4,7 @@
 #define FORNITORE_H
 
 #include "redis_helper.h"
+#include "../../con2db/pgsql.h"
 
 #include <string>
 #include <stdio.h>

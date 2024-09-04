@@ -6,6 +6,8 @@
 #define T_CHANNEL "stream2"
 #define F_CHANNEL "stream3"
 
+Con2DB db("localhost", "5432", "postgres", "postgres", "backend");
+
 Fornitore::Fornitore(int id, std::string cn)
     : fornitore_id(id), company_name(cn), state(FornitoreState::WaitingForOrder) {}
 
@@ -96,9 +98,25 @@ bool Fornitore::parseCustomerMessage(redisReply *reply) {
 }
 
 void Fornitore::processOrder(char *product, char *user) {
+    PGresult *res;
+    char sqlcmd[1000];
+    const char* fornitore = company_name.c_str();
+
     transitionToProcessingOrder();
     printf("Processing order for user: %s, product: %s\n", user, product);
     //TODO remove item from available products
+    sprintf(sqlcmd, "BEGIN");
+    res = db.ExecSQLcmd(sqlcmd);
+    PQclear(res);
+
+    sprintf(sqlcmd, "UPDATE availableproducts SET quantity = quantity - 1 WHERE p_name = \'%s\' AND fornitore = \'%s\' AND quantity > 0;", product, fornitore);
+    printf(sqlcmd);
+    res = db.ExecSQLcmd(sqlcmd);
+    PQclear(res);
+
+    sprintf(sqlcmd, "COMMIT");
+    res = db.ExecSQLcmd(sqlcmd);
+    PQclear(res);
 
     reply = RedisCommand(c2r, "XADD %s * utente %s", T_CHANNEL, user);                                      //notifies trasportatori
     reply = RedisCommand(c2r, "XADD %s * utente %s stato CONFIRMED", C_CHANNEL, user);                      //notifies customer
