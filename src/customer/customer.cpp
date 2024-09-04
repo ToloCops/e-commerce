@@ -105,7 +105,6 @@ PGresult* Customer::getAvailableProducts() {
 
     PGresult *res;
     PGresult *prods;
-    PGresult *test;
     int nrows;
     char sqlcmd[1000];
 
@@ -123,7 +122,7 @@ PGresult* Customer::getAvailableProducts() {
             PQgetvalue(prods, i, PQfnumber(prods, "p_name")),
             PQgetvalue(prods, i, PQfnumber(prods, "fornitore")),
             atoi(PQgetvalue(prods, i, PQfnumber(prods, "quantity")))
-            );
+        );
     }
     printf("\n");
 
@@ -136,20 +135,30 @@ PGresult* Customer::getAvailableProducts() {
 }
 
 void Customer::simulateOrder() {
-    if (dist(rng) < 0.5) {                                                                                          // 50% di probabilità di effettuare un ordine
-        //TODO
-        //Richiesta al db dei prodotti disponibili
-        auto prods = getAvailableProducts();
-        //TODO
-        //Scelta di un prodotto randomico
-
-
-        PQclear(prods);
+    if (dist(rng) < 0.5) {
+        int n_prods;
+        int rand_prod;
 
         char fornitore[100];
         char prodotto[100];
-        strcpy(fornitore, "apple");
-        strcpy(prodotto,  "iphone");
+
+        auto prods = getAvailableProducts();
+        n_prods = PQntuples(prods);
+        
+        std::random_device rd;  // Generatore di numeri casuali vero (o quasi)
+        std::mt19937 gen(rd()); // Generatore di numeri casuali Mersenne Twister
+        std::uniform_int_distribution<> distrib(0, n_prods-1); // Distribuzione uniforme tra 0 e n
+
+        rand_prod = distrib(gen) ; // Genera un numero casuale tra 0 e n
+        fprintf(stderr, "Random product: (%s, %s)\n",
+            PQgetvalue(prods, rand_prod, PQfnumber(prods, "p_name")),
+            PQgetvalue(prods, rand_prod, PQfnumber(prods, "fornitore"))
+        );
+
+        strcpy(fornitore, PQgetvalue(prods, rand_prod, PQfnumber(prods, "fornitore")));
+        strcpy(prodotto,  PQgetvalue(prods, rand_prod, PQfnumber(prods, "p_name")));
+        PQclear(prods);
+
         reply = RedisCommand(c2r, "XADD %s * fornitore %s prodotto %s utente %s",                                   // Informa i fornitori del prodotto che vuole acquistare
                                 F_CHANNEL, fornitore, prodotto, username);
         assertReplyType(c2r, reply, REDIS_REPLY_STRING);
