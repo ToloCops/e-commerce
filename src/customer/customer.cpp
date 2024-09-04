@@ -104,7 +104,7 @@ bool Customer::parseMessage(redisReply *reply) {
 void Customer::getAvailableProducts() {
 
     PGresult *res;
-    int rows;
+    int nrows;
     char sqlcmd[1000];
 
     sprintf(sqlcmd, "BEGIN");
@@ -113,12 +113,17 @@ void Customer::getAvailableProducts() {
 
     sprintf(sqlcmd, "SELECT * FROM availableproducts");
     res = db.ExecSQLcmd(sqlcmd);
+    nrows = PQntuples(res);
 
-    fprintf(stderr, "Products available: (%s, %s, %d)\n",
-        PQgetvalue(res, 1, PQfnumber(res, "p_name")),
-        PQgetvalue(res, 1, PQfnumber(res, "fornitore")),
-        atoi(PQgetvalue(res, 1, PQfnumber(res, "quantity")))
-        );
+    printf("\nAvailable Products: \n");
+    for (int i = 0; i < nrows; i++) {
+        fprintf(stderr, "(%s, %s, %d)\n",
+            PQgetvalue(res, i, PQfnumber(res, "p_name")),
+            PQgetvalue(res, i, PQfnumber(res, "fornitore")),
+            atoi(PQgetvalue(res, i, PQfnumber(res, "quantity")))
+            );
+    }
+    printf("\n");
 
     PQclear(res);
 
