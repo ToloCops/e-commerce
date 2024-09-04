@@ -54,7 +54,7 @@ private:
     bool parseMessage(redisReply *redis); //Parses messages from fornitori or trasportatori to update order status, returns TRUE if the message was for him
     
     //DB Functions
-    void getAvailableProducts();
+    PGresult* getAvailableProducts();
 
     //Order generation
     void simulateOrder();

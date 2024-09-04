@@ -101,9 +101,11 @@ bool Customer::parseMessage(redisReply *reply) {
     return for_me;
 }
 
-void Customer::getAvailableProducts() {
+PGresult* Customer::getAvailableProducts() {
 
     PGresult *res;
+    PGresult *prods;
+    PGresult *test;
     int nrows;
     char sqlcmd[1000];
 
@@ -111,25 +113,25 @@ void Customer::getAvailableProducts() {
     res = db.ExecSQLcmd(sqlcmd);
     PQclear(res);
 
-    sprintf(sqlcmd, "SELECT * FROM availableproducts");
-    res = db.ExecSQLcmd(sqlcmd);
-    nrows = PQntuples(res);
+    sprintf(sqlcmd, "SELECT * FROM availableproducts WHERE quantity > 0");
+    prods = db.ExecSQLcmd(sqlcmd);
+    nrows = PQntuples(prods);
 
     printf("\nAvailable Products: \n");
     for (int i = 0; i < nrows; i++) {
         fprintf(stderr, "(%s, %s, %d)\n",
-            PQgetvalue(res, i, PQfnumber(res, "p_name")),
-            PQgetvalue(res, i, PQfnumber(res, "fornitore")),
-            atoi(PQgetvalue(res, i, PQfnumber(res, "quantity")))
+            PQgetvalue(prods, i, PQfnumber(prods, "p_name")),
+            PQgetvalue(prods, i, PQfnumber(prods, "fornitore")),
+            atoi(PQgetvalue(prods, i, PQfnumber(prods, "quantity")))
             );
     }
     printf("\n");
 
-    PQclear(res);
-
     sprintf(sqlcmd, "COMMIT");
     res = db.ExecSQLcmd(sqlcmd);
     PQclear(res);
+
+    return prods;
 
 }
 
@@ -137,9 +139,12 @@ void Customer::simulateOrder() {
     if (dist(rng) < 0.5) {                                                                                          // 50% di probabilità di effettuare un ordine
         //TODO
         //Richiesta al db dei prodotti disponibili
-
+        auto prods = getAvailableProducts();
         //TODO
         //Scelta di un prodotto randomico
+
+
+        PQclear(prods);
 
         char fornitore[100];
         char prodotto[100];
@@ -216,8 +221,6 @@ void Customer::run() {
     std::cout << "Hello word from " << getName() << std::endl;
     c2r = initializeRedisConnection(username, seed, pid);
     initGroup(c2r, C_CHANNEL, username);
-    //testDBConnection();
-    getAvailableProducts();
     while (true) {
         std::this_thread::sleep_for(std::chrono::seconds(1)); // Simula il passare del tempo
         handleState();
