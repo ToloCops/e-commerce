@@ -104,12 +104,17 @@ void Fornitore::processOrder(char *product, char *user) {
 
     transitionToProcessingOrder();
     printf("Processing order for user: %s, product: %s\n", user, product);
-    //TODO remove item from available products
+    
     sprintf(sqlcmd, "BEGIN");
     res = db.ExecSQLcmd(sqlcmd);
     PQclear(res);
 
-    sprintf(sqlcmd, "UPDATE availableproducts SET quantity = quantity - 1 WHERE p_name = \'%s\' AND fornitore = \'%s\' AND quantity > 0;", product, fornitore);
+    sprintf(sqlcmd, "UPDATE availableproducts SET quantity = quantity - 1 WHERE p_name = \'%s\' AND fornitore = \'%s\' AND quantity > 0", product, fornitore);
+    printf(sqlcmd);
+    res = db.ExecSQLcmd(sqlcmd);
+    PQclear(res);
+
+    sprintf(sqlcmd, "INSERT INTO transactions (customer, p_name, fornitore, quantity) VALUES (\'%s\', \'%s\', \'%s\', 1) ON CONFLICT DO NOTHING", user, product, fornitore);
     printf(sqlcmd);
     res = db.ExecSQLcmd(sqlcmd);
     PQclear(res);
