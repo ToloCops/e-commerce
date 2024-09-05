@@ -66,26 +66,20 @@ bool Customer::parseMessage(redisReply *reply) {
                             redisReply *key = fields->element[k];
                             redisReply *value = fields->element[k + 1];
 
-                            if (k == 0) 
-                            {
-                                if (strcmp(value->str, username) != 0)                                              // Controlla che il messaggio fosse per lui
-                                {
+                            if (k == 0) {
+                                if (strcmp(value->str, username) != 0) {      // Controlla che il messaggio fosse per lui
                                     break;
                                 }
-                                else 
-                                {
+                                else {
                                     for_me = true;
                                 }
                             }
-                            else if (k == 2)                                                                        // Aggiorna lo stato dell'ordine
-                            {
-                                if (strcmp(value->str, "CONFIRMED") == 0) 
-                                {
+                            else if (k == 2) {                                // Aggiorna lo stato dell'ordine
+                                if (strcmp(value->str, "CONFIRMED") == 0) {
                                     std::cout << "Customer " << username << " --> order CONFIRMED!\n" << std::endl;
                                     transitionToWaitingForDelivery();
                                 }
-                                else if (strcmp(value->str, "DELIVERED") == 0) 
-                                {
+                                else if (strcmp(value->str, "DELIVERED") == 0) {
                                     std::cout << "Customer " << username << " --> product RECEIVED!\n" << std::endl;
                                     transitionToIdle();
                                 }
@@ -135,6 +129,7 @@ PGresult* Customer::getAvailableProducts() {
 }
 
 void Customer::simulateOrder() {
+    //Probabilità del 50% di effetuare un ordine
     if (dist(rng) < 0.5) {
         int n_prods;
         int rand_prod;
@@ -144,6 +139,12 @@ void Customer::simulateOrder() {
 
         auto prods = getAvailableProducts();
         n_prods = PQntuples(prods);
+
+        if (n_prods == 0) {
+            printf("No products available\n");
+            transitionToIdle();
+            return;
+        }
         
         std::random_device rd;  // Generatore di numeri casuali vero (o quasi)
         std::mt19937 gen(rd()); // Generatore di numeri casuali Mersenne Twister
@@ -180,10 +181,11 @@ void Customer::handleState()
             break;
 
         case CustomerState::WaitingOrderConfirm:
-            reply = RedisCommand(c2r, "XREADGROUP GROUP %s %s BLOCK 10000 COUNT 10 NOACK STREAMS %s >",             // Interroga lo stream dei customer per ricevere nuovi messaggi
+            // Interroga lo stream dei customer per ricevere nuovi messaggi
+            reply = RedisCommand(c2r, "XREADGROUP GROUP %s %s BLOCK 10000 COUNT 10 NOACK STREAMS %s >",             
 			                        username, username, C_CHANNEL);
-            if (reply->type == 4 || !parseMessage(reply))                                                           // Controlla se ha avuto risposta e che il messaggio fosse per lui
-            {                                                                                                       
+            // Controlla se ha avuto risposta e che il messaggio fosse per lui
+            if (reply->type == 4 || !parseMessage(reply)) {                                                                                                                                                                 
                 std::cout << "Customer " << username << "--> waiting for order confirmation...\n" << std::endl;
                 std::this_thread::sleep_for(std::chrono::seconds(2));  
             }
@@ -192,8 +194,7 @@ void Customer::handleState()
         case CustomerState::WaitingForDelivery:
             reply = RedisCommand(c2r, "XREADGROUP GROUP %s %s BLOCK 10000 COUNT 10 NOACK STREAMS %s >", 
 			                        username, username, C_CHANNEL);
-            if (reply->type == 4 || !parseMessage(reply)) 
-            {
+            if (reply->type == 4 || !parseMessage(reply)) {
                 std::cout << "Customer " << username << " --> waiting for delivery...\n" << std::endl;
                 std::this_thread::sleep_for(std::chrono::seconds(2));
             }

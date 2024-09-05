@@ -65,14 +65,11 @@ bool Fornitore::parseCustomerMessage(redisReply *reply) {
                         for (size_t k = 0; k < fields->elements; k += 2) {
                             redisReply *key = fields->element[k];
                             redisReply *value = fields->element[k + 1];
-                            if (k == 0) 
-                            {
-                                if (strcmp(company_name.c_str(), value->str) != 0)                                              // Controlla che il messaggio fosse per lui
-                                {
+                            if (k == 0) {
+                                if (strcmp(company_name.c_str(), value->str) != 0) {                                             // Controlla che il messaggio fosse per lui
                                     break;
                                 }
-                                else 
-                                {
+                                else {
                                     for_me = true;
                                 }
                             }
@@ -112,11 +109,23 @@ void Fornitore::processOrder(char *product, char *user) {
     sprintf(sqlcmd, "UPDATE availableproducts SET quantity = quantity - 1 WHERE p_name = \'%s\' AND fornitore = \'%s\' AND quantity > 0", product, fornitore);
     printf(sqlcmd);
     res = db.ExecSQLcmd(sqlcmd);
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        fprintf(stderr, "Errore durante l'UPDATE");
+        PQclear(res);
+        return -1;
+    }
+
     PQclear(res);
 
     sprintf(sqlcmd, "INSERT INTO transactions (customer, p_name, fornitore, quantity) VALUES (\'%s\', \'%s\', \'%s\', 1) ON CONFLICT DO NOTHING", user, product, fornitore);
     printf(sqlcmd);
     res = db.ExecSQLcmd(sqlcmd);
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        fprintf(stderr, "Errore durante l'INSERT");
+        PQclear(res);
+        return -1;
+    }
+
     PQclear(res);
 
     sprintf(sqlcmd, "COMMIT");
@@ -136,6 +145,7 @@ void Fornitore::handleState() {
                 std::cout << "Fornitore " << username << " --> waiting for order...\n" << std::endl;
                 std::this_thread::sleep_for(std::chrono::seconds(2));
             }
+            //se parseCustomerMessage torna true è stata chiamata processOrder
             break;
 
         case FornitoreState::ProcessingOrder:
