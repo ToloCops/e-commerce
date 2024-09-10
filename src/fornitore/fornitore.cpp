@@ -106,23 +106,45 @@ void Fornitore::processOrder(char *product, char *user) {
     res = db.ExecSQLcmd(sqlcmd);
     PQclear(res);
 
+    //20% di possibilità di rifiutare l'ordine
+    if (dist(rng) < 0.2) {
+        sprintf(sqlcmd, "INSERT INTO transactions (customer, p_name, fornitore, quantity, esito) VALUES (\'%s\', \'%s\', \'%s\', 1, 'REJECTED') ON CONFLICT DO NOTHING", user, product, fornitore);
+        printf(sqlcmd);
+        res = db.ExecSQLcmd(sqlcmd);
+        PQclear(res);
+        sprintf(sqlcmd, "COMMIT");
+        res = db.ExecSQLcmd(sqlcmd);
+        PQclear(res);
+        reply = RedisCommand(c2r, "XADD %s * utente %s stato REJECTED", C_CHANNEL, user);                      //notifies customer
+        return -1;
+    }
+
     sprintf(sqlcmd, "UPDATE availableproducts SET quantity = quantity - 1 WHERE p_name = \'%s\' AND fornitore = \'%s\' AND quantity > 0", product, fornitore);
     printf(sqlcmd);
     res = db.ExecSQLcmd(sqlcmd);
     if (PQresultStatus(res) != PGRES_COMMAND_OK) {
         fprintf(stderr, "Errore durante l'UPDATE");
         PQclear(res);
+        sprintf(sqlcmd, "INSERT INTO transactions (customer, p_name, fornitore, quantity, esito) VALUES (\'%s\', \'%s\', \'%s\', 1, 'REJECTED') ON CONFLICT DO NOTHING", user, product, fornitore);
+        printf(sqlcmd);
+        res = db.ExecSQLcmd(sqlcmd);
+        PQclear(res);
+        sprintf(sqlcmd, "COMMIT");
+        res = db.ExecSQLcmd(sqlcmd);
+        PQclear(res);
+        reply = RedisCommand(c2r, "XADD %s * utente %s stato REJECTED", C_CHANNEL, user);                      //notifies customer
         return -1;
     }
 
     PQclear(res);
 
-    sprintf(sqlcmd, "INSERT INTO transactions (customer, p_name, fornitore, quantity) VALUES (\'%s\', \'%s\', \'%s\', 1) ON CONFLICT DO NOTHING", user, product, fornitore);
+    sprintf(sqlcmd, "INSERT INTO transactions (customer, p_name, fornitore, quantity, esito) VALUES (\'%s\', \'%s\', \'%s\', 1, 'CONFIRMED') ON CONFLICT DO NOTHING", user, product, fornitore);
     printf(sqlcmd);
     res = db.ExecSQLcmd(sqlcmd);
     if (PQresultStatus(res) != PGRES_COMMAND_OK) {
         fprintf(stderr, "Errore durante l'INSERT");
         PQclear(res);
+        reply = RedisCommand(c2r, "XADD %s * utente %s stato REJECTED", C_CHANNEL, user);                      //notifies customer
         return -1;
     }
 

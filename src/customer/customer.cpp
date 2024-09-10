@@ -79,8 +79,12 @@ bool Customer::parseMessage(redisReply *reply) {
                                     std::cout << "Customer " << username << " --> order CONFIRMED!\n" << std::endl;
                                     transitionToWaitingForDelivery();
                                 }
+                                else if (strcmp(value->str, "REJECTED") == 0) {
+                                    std::cout << "Customer " << username << " --> order REJECTED!\n" << std::endl;
+                                    transitionToIdle();
+                                }
                                 else if (strcmp(value->str, "DELIVERED") == 0) {
-                                    std::cout << "Customer " << username << " --> product RECEIVED!\n" << std::endl;
+                                    std::cout << "Customer " << username << " --> order RECEIVED!\n" << std::endl;
                                     transitionToIdle();
                                 }
                             }
@@ -129,55 +133,53 @@ PGresult* Customer::getAvailableProducts() {
 }
 
 void Customer::simulateOrder() {
-    //Probabilità del 50% di effetuare un ordine
-    if (dist(rng) < 0.5) {
-        int n_prods;
-        int rand_prod;
+    int n_prods;
+    int rand_prod;
 
-        char fornitore[100];
-        char prodotto[100];
+    char fornitore[100];
+    char prodotto[100];
 
-        auto prods = getAvailableProducts();
-        n_prods = PQntuples(prods);
+    auto prods = getAvailableProducts();
+    n_prods = PQntuples(prods);
 
-        if (n_prods == 0) {
-            printf("No products available\n");
-            transitionToIdle();
-            return;
-        }
-        
-        std::random_device rd;  // Generatore di numeri casuali vero (o quasi)
-        std::mt19937 gen(rd()); // Generatore di numeri casuali Mersenne Twister
-        std::uniform_int_distribution<> distrib(0, n_prods-1); // Distribuzione uniforme tra 0 e n
-
-        rand_prod = distrib(gen) ; // Genera un numero casuale tra 0 e n
-        fprintf(stderr, "Random product: (%s, %s)\n",
-            PQgetvalue(prods, rand_prod, PQfnumber(prods, "p_name")),
-            PQgetvalue(prods, rand_prod, PQfnumber(prods, "fornitore"))
-        );
-
-        strcpy(fornitore, PQgetvalue(prods, rand_prod, PQfnumber(prods, "fornitore")));
-        strcpy(prodotto,  PQgetvalue(prods, rand_prod, PQfnumber(prods, "p_name")));
-        PQclear(prods);
-
-        reply = RedisCommand(c2r, "XADD %s * fornitore %s prodotto %s utente %s",                                   // Informa i fornitori del prodotto che vuole acquistare
-                                F_CHANNEL, fornitore, prodotto, username);
-        assertReplyType(c2r, reply, REDIS_REPLY_STRING);
-        printf("main(): pid =%d: stream %s: Added fornitore -> %s prodotto -> %s utente -> %s (id: %s)\n",
-                pid, F_CHANNEL, fornitore, prodotto, username, reply->str);
-        freeReplyObject(reply);
-
-        transitionToWaitingOrderConfirm();
-    } else {
+    if (n_prods == 0) {
+        printf("No products available\n");
         transitionToIdle();
+        return;
     }
+    
+    std::random_device rd;  // Generatore di numeri casuali vero (o quasi)
+    std::mt19937 gen(rd()); // Generatore di numeri casuali Mersenne Twister
+    std::uniform_int_distribution<> distrib(0, n_prods-1); // Distribuzione uniforme tra 0 e n
+
+    rand_prod = distrib(gen) ; // Genera un numero casuale tra 0 e n
+    fprintf(stderr, "Random product: (%s, %s)\n",
+        PQgetvalue(prods, rand_prod, PQfnumber(prods, "p_name")),
+        PQgetvalue(prods, rand_prod, PQfnumber(prods, "fornitore"))
+    );
+
+    strcpy(fornitore, PQgetvalue(prods, rand_prod, PQfnumber(prods, "fornitore")));
+    strcpy(prodotto,  PQgetvalue(prods, rand_prod, PQfnumber(prods, "p_name")));
+    PQclear(prods);
+
+    reply = RedisCommand(c2r, "XADD %s * fornitore %s prodotto %s utente %s",                                   // Informa i fornitori del prodotto che vuole acquistare
+                            F_CHANNEL, fornitore, prodotto, username);
+    assertReplyType(c2r, reply, REDIS_REPLY_STRING);
+    printf("main(): pid =%d: stream %s: Added fornitore -> %s prodotto -> %s utente -> %s (id: %s)\n",
+            pid, F_CHANNEL, fornitore, prodotto, username, reply->str);
+    freeReplyObject(reply);
+
+    transitionToWaitingOrderConfirm();
 }
 
 void Customer::handleState() 
 {
     switch (state) {
         case CustomerState::Idle:
-            simulateOrder();
+            //50% di possibilità di generare un ordine
+            if (dist(rng) < 0.5) {
+                simulateOrder();
+            }
             break;
 
         case CustomerState::WaitingOrderConfirm:

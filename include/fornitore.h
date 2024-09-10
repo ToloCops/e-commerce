@@ -28,6 +28,10 @@ private:
     std::string company_name;
     FornitoreState state;
 
+    //Probability of order reject
+    std::mt19937 rng;
+    std::uniform_real_distribution<> dist;
+
     //Redis connection variables
     redisContext *c2r;
     redisReply *reply;
