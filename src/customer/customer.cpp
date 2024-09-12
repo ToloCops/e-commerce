@@ -77,6 +77,9 @@ bool Customer::parseMessage(redisReply *reply) {
                             else if (k == 2) {                                // Aggiorna lo stato dell'ordine
                                 if (strcmp(value->str, "CONFIRMED") == 0) {
                                     std::cout << "Customer " << username << " --> order CONFIRMED!\n" << std::endl;
+                                    request_confirmed = std::chrono::steady_clock::now();
+                                    auto durata = std::chrono::duration_cast<std::chrono::milliseconds>(request_confirmed - request_sent).count();
+                                    std::cout << "TEMPO DI RISPOSTA " << durata << " ms\n";
                                     transitionToWaitingForDelivery();
                                 }
                                 else if (strcmp(value->str, "REJECTED") == 0) {
@@ -165,6 +168,9 @@ void Customer::simulateOrder() {
     reply = RedisCommand(c2r, "XADD %s * fornitore %s prodotto %s utente %s",                                   // Informa i fornitori del prodotto che vuole acquistare
                             F_CHANNEL, fornitore, prodotto, username);
     assertReplyType(c2r, reply, REDIS_REPLY_STRING);
+
+    request_sent = std::chrono::steady_clock::now();
+
     printf("main(): pid =%d: stream %s: Added fornitore -> %s prodotto -> %s utente -> %s (id: %s)\n",
             pid, F_CHANNEL, fornitore, prodotto, username, reply->str);
     freeReplyObject(reply);

@@ -12,6 +12,7 @@
 #include <random>
 #include <chrono>
 #include <thread>
+#include <ctime>
 #include <hiredis/hiredis.h>
 #include <con2redis.h>
 #include <unistd.h>
@@ -35,6 +36,10 @@ private:
     //Probability of order generation
     std::mt19937 rng;
     std::uniform_real_distribution<> dist;
+
+    //Performance monitoring variables
+    std::chrono::time_point<std::chrono::steady_clock> request_sent;
+    std::chrono::time_point<std::chrono::steady_clock> request_confirmed;
 
     //Redis connection variables
     redisContext *c2r;

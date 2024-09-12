@@ -83,15 +83,20 @@ void Trasportatore::handleState() {
             }
             break;
 
-        case TrasportatoreState::InTransit:
-            std::this_thread::sleep_for(std::chrono::seconds(2));
+        case TrasportatoreState::InTransit: {
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> distr(1, 5);
+            int tempoConsegna = distr(gen);
+            std::this_thread::sleep_for(std::chrono::seconds(tempoConsegna));
             reply = RedisCommand(c2r, "XADD %s * utente %s stato DELIVERED", C_CHANNEL, customer);                      //notifies customer
+            printf("ORDER DELIVERED IN %d DAYS", tempoConsegna);
             std::cout << "Trasportatore " << username << " --> order delivered! Coming back...\n" << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(2));
             std::cout << "Trasportatore " << username << " --> back to the HQ.\n" << std::endl;
             transitionToIdle();
             break;
-
+        }
         default:
             std::cerr << "Unknown state!" << std::endl;
             break;

@@ -11,6 +11,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <random>
 #include <hiredis/hiredis.h>
 #include <con2redis.h>
 
@@ -27,6 +28,10 @@ private:
     int trasportatore_id;
     TrasportatoreState state;
     char *customer;
+
+    //generatore di numeri casuali
+    
+    
 
     //Redis connection variables
     redisContext *c2r;
