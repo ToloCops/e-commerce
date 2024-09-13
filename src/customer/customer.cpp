@@ -76,10 +76,25 @@ bool Customer::parseMessage(redisReply *reply) {
                             }
                             else if (k == 2) {                                // Aggiorna lo stato dell'ordine
                                 if (strcmp(value->str, "CONFIRMED") == 0) {
+                                    PGresult *res;
+                                    char sqlcmd[1000];
                                     std::cout << "Customer " << username << " --> order CONFIRMED!\n" << std::endl;
                                     request_confirmed = std::chrono::steady_clock::now();
                                     auto durata = std::chrono::duration_cast<std::chrono::milliseconds>(request_confirmed - request_sent).count();
                                     std::cout << "TEMPO DI RISPOSTA " << durata << " ms\n";
+
+                                    sprintf(sqlcmd, "BEGIN");
+                                    res = db.ExecSQLcmd(sqlcmd);
+                                    PQclear(res);
+
+                                    sprintf(sqlcmd, "INSERT INTO performance_logs (event_type, time_logged) VALUES ('CONFIRMATION', \'%d\') ON CONFLICT DO NOTHING", durata);
+                                    printf(sqlcmd);
+                                    res = db.ExecSQLcmd(sqlcmd);
+                                    PQclear(res);
+                                    sprintf(sqlcmd, "COMMIT");
+                                    res = db.ExecSQLcmd(sqlcmd);
+                                    PQclear(res);
+
                                     transitionToWaitingForDelivery();
                                 }
                                 else if (strcmp(value->str, "REJECTED") == 0) {
