@@ -49,7 +49,7 @@ bool Fornitore::parseCustomerMessage(redisReply *reply) {
                 redisReply *stream_name = stream->element[0];
                 redisReply *entries = stream->element[1];
 
-                printf("Stream: %s\n", stream_name->str);
+                //printf("Stream: %s\n", stream_name->str);
 
                 // Ogni entry nello stream
                 for (size_t j = 0; j < entries->elements; j++) {
@@ -59,7 +59,7 @@ bool Fornitore::parseCustomerMessage(redisReply *reply) {
                         redisReply *entry_id = entry->element[0];
                         redisReply *fields = entry->element[1];
 
-                        printf("Entry ID: %s\n", entry_id->str);
+                        //printf("Entry ID: %s\n", entry_id->str);
 
                         // Stampiamo le coppie chiave-valore
                         for (size_t k = 0; k < fields->elements; k += 2) {
@@ -84,7 +84,7 @@ bool Fornitore::parseCustomerMessage(redisReply *reply) {
                                 processOrder(product, user);
                             }
 
-                            printf("%s: %s\n", key->str, value->str);
+                            //printf("%s: %s\n", key->str, value->str);
                         }
                     }
                 }
@@ -95,12 +95,13 @@ bool Fornitore::parseCustomerMessage(redisReply *reply) {
 }
 
 void Fornitore::processOrder(char *product, char *user) {
+    processing_started = std::chrono::steady_clock::now();
     PGresult *res;
     char sqlcmd[1000];
     const char* fornitore = company_name.c_str();
 
     transitionToProcessingOrder();
-    printf("Processing order for user: %s, product: %s\n", user, product);
+    printf(BLUE "Processing order for user: %s, product: %s\n" RESET, user, product);
     
     sprintf(sqlcmd, "BEGIN");
     res = db.ExecSQLcmd(sqlcmd);
@@ -109,7 +110,7 @@ void Fornitore::processOrder(char *product, char *user) {
     //20% di possibilità di rifiutare l'ordine
     if (dist(rng) < 0.2) {
         sprintf(sqlcmd, "INSERT INTO transactions (customer, p_name, fornitore, quantity, esito) VALUES (\'%s\', \'%s\', \'%s\', 1, 'REJECTED') ON CONFLICT DO NOTHING", user, product, fornitore);
-        printf(sqlcmd);
+        printf(BLUE "%s\n" RESET,sqlcmd);
         res = db.ExecSQLcmd(sqlcmd);
         PQclear(res);
         sprintf(sqlcmd, "COMMIT");
@@ -120,13 +121,13 @@ void Fornitore::processOrder(char *product, char *user) {
     }
 
     sprintf(sqlcmd, "UPDATE availableproducts SET quantity = quantity - 1 WHERE p_name = \'%s\' AND fornitore = \'%s\' AND quantity > 0", product, fornitore);
-    printf(sqlcmd);
+    printf(BLUE "%s\n" RESET,sqlcmd);
     res = db.ExecSQLcmd(sqlcmd);
     if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-        fprintf(stderr, "Errore durante l'UPDATE");
+        fprintf(stderr, "Errore durante l'UPDATE\n");
         PQclear(res);
         sprintf(sqlcmd, "INSERT INTO transactions (customer, p_name, fornitore, quantity, esito) VALUES (\'%s\', \'%s\', \'%s\', 1, 'REJECTED') ON CONFLICT DO NOTHING", user, product, fornitore);
-        printf(sqlcmd);
+        printf(BLUE "%s\n" RESET,sqlcmd);
         res = db.ExecSQLcmd(sqlcmd);
         PQclear(res);
         sprintf(sqlcmd, "COMMIT");
@@ -139,10 +140,10 @@ void Fornitore::processOrder(char *product, char *user) {
     PQclear(res);
 
     sprintf(sqlcmd, "INSERT INTO transactions (customer, p_name, fornitore, quantity, esito) VALUES (\'%s\', \'%s\', \'%s\', 1, 'CONFIRMED') ON CONFLICT DO NOTHING", user, product, fornitore);
-    printf(sqlcmd);
+    printf(BLUE "%s\n" RESET,sqlcmd);
     res = db.ExecSQLcmd(sqlcmd);
     if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-        fprintf(stderr, "Errore durante l'INSERT");
+        fprintf(stderr, "Errore durante l'INSERT\n");
         PQclear(res);
         reply = RedisCommand(c2r, "XADD %s * utente %s stato REJECTED", C_CHANNEL, user);                      //notifies customer
         return -1;
@@ -156,6 +157,23 @@ void Fornitore::processOrder(char *product, char *user) {
 
     reply = RedisCommand(c2r, "XADD %s * utente %s", T_CHANNEL, user);                                      //notifies trasportatori
     reply = RedisCommand(c2r, "XADD %s * utente %s stato CONFIRMED", C_CHANNEL, user);                      //notifies customer
+    
+    processing_ended = std::chrono::steady_clock::now();
+    auto durata = std::chrono::duration_cast<std::chrono::milliseconds>(processing_ended - processing_started).count();
+
+    std::cout << BLUE << "TEMPO DI PROCESSO " << durata << " ms\n" << RESET << std::endl;
+
+    sprintf(sqlcmd, "BEGIN");
+    res = db.ExecSQLcmd(sqlcmd);
+    PQclear(res);
+
+    sprintf(sqlcmd, "INSERT INTO performance_logs (event_type, time_logged) VALUES ('ORDER PROCESSING', \'%d\') ON CONFLICT DO NOTHING", durata);
+    printf(BLUE "%s\n" RESET,sqlcmd);
+    res = db.ExecSQLcmd(sqlcmd);
+    PQclear(res);
+    sprintf(sqlcmd, "COMMIT");
+    res = db.ExecSQLcmd(sqlcmd);
+    PQclear(res);
 }
 
 void Fornitore::handleState() {
@@ -164,7 +182,7 @@ void Fornitore::handleState() {
             reply = RedisCommand(c2r, "XREADGROUP GROUP %s %s BLOCK 10000 COUNT 10 NOACK STREAMS %s >", 
 			  username, username, F_CHANNEL);
             if (!parseCustomerMessage(reply)) {
-                std::cout << "Fornitore " << username << " --> waiting for order...\n" << std::endl;
+                std::cout << BLUE << "Fornitore " << username << " --> waiting for order...\n" << RESET << std::endl;
                 std::this_thread::sleep_for(std::chrono::seconds(2));
             }
             //se parseCustomerMessage torna true è stata chiamata processOrder
@@ -181,7 +199,7 @@ void Fornitore::handleState() {
 }
 
 void Fornitore::run() {
-    std::cout << "Hello word from " << getCompany() << std::endl;
+    std::cout << BLUE << "Hello word from " << getCompany() << RESET << std::endl;
     c2r = initializeRedisConnection(username, seed, pid);
     initGroup(c2r, F_CHANNEL, username);
     while (true) {

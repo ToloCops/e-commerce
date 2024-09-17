@@ -14,6 +14,9 @@
 #include <hiredis/hiredis.h>
 #include <con2redis.h>
 
+#define RESET   "\033[0m"
+#define BLUE    "\033[34m"
+
 class Fornitore {
 private:
 
@@ -31,6 +34,10 @@ private:
     //Probability of order reject
     std::mt19937 rng;
     std::uniform_real_distribution<> dist;
+
+    //Performance monitoring variables
+    std::chrono::time_point<std::chrono::steady_clock> processing_started;
+    std::chrono::time_point<std::chrono::steady_clock> processing_ended;
 
     //Redis connection variables
     redisContext *c2r;

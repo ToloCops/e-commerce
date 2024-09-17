@@ -38,7 +38,7 @@ void Trasportatore::parseFornitoreMessage(redisReply *reply) {
                 redisReply *stream_name = stream->element[0];
                 redisReply *entries = stream->element[1];
 
-                printf("Stream: %s\n", stream_name->str);
+                //printf("Stream: %s\n", stream_name->str);
 
                 // Ogni entry nello stream
                 for (size_t j = 0; j < entries->elements; j++) {
@@ -48,7 +48,7 @@ void Trasportatore::parseFornitoreMessage(redisReply *reply) {
                         redisReply *entry_id = entry->element[0];
                         redisReply *fields = entry->element[1];
 
-                        printf("Entry ID: %s\n", entry_id->str);
+                        //printf("Entry ID: %s\n", entry_id->str);
 
                         // Stampiamo le coppie chiave-valore
                         for (size_t k = 0; k < fields->elements; k += 2) {
@@ -59,7 +59,7 @@ void Trasportatore::parseFornitoreMessage(redisReply *reply) {
                                 customer = value->str;
                             }
 
-                            printf("%s: %s\n", key->str, value->str);
+                            //printf("%s: %s\n", key->str, value->str);
                         }
                     }
                 }
@@ -78,7 +78,7 @@ void Trasportatore::handleState() {
 			  username, username, T_CHANNEL);
             if (reply->type != 4) {
                 parseFornitoreMessage(reply);
-                std::cout << "Trasportatore " << username << " --> order received! Deliver to user: " << customer << "\n"<< std::endl;
+                std::cout << GREEN << "Trasportatore " << username << " --> order received! Deliver to user: " << customer << "\n" << RESET << std::endl;
                 transitionToInTransit();
             }
             break;
@@ -90,10 +90,10 @@ void Trasportatore::handleState() {
             int tempoConsegna = distr(gen);
             std::this_thread::sleep_for(std::chrono::seconds(tempoConsegna));
             reply = RedisCommand(c2r, "XADD %s * utente %s stato DELIVERED", C_CHANNEL, customer);                      //notifies customer
-            printf("ORDER DELIVERED IN %d DAYS", tempoConsegna);
-            std::cout << "Trasportatore " << username << " --> order delivered! Coming back...\n" << std::endl;
+            printf(GREEN "ORDER DELIVERED IN %d DAYS" RESET, tempoConsegna);
+            std::cout << GREEN << "Trasportatore " << username << " --> order delivered! Coming back...\n" << RESET << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(2));
-            std::cout << "Trasportatore " << username << " --> back to the HQ.\n" << std::endl;
+            std::cout << GREEN << "Trasportatore " << username << " --> back to the HQ.\n" << RESET << std::endl;
             transitionToIdle();
             break;
         }
@@ -104,7 +104,7 @@ void Trasportatore::handleState() {
 }
 
 void Trasportatore::run() {
-    std::cout << "Hello word from Trasportatore"  << std::endl;
+    std::cout << GREEN << "Hello word from Trasportatore" << RESET << std::endl;
     c2r = initializeRedisConnection(username, seed, pid);
     strcpy(username, "543453");
     initGroup(c2r, T_CHANNEL, username);

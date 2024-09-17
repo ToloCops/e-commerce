@@ -15,6 +15,9 @@
 #include <hiredis/hiredis.h>
 #include <con2redis.h>
 
+#define RESET   "\033[0m"
+#define GREEN   "\033[32m"
+
 class Trasportatore {
 private:
 
