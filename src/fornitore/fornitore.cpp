@@ -108,7 +108,7 @@ void Fornitore::processOrder(char *product, char *user) {
     PQclear(res);
 
     //20% di possibilità di rifiutare l'ordine
-    if (dist(rng) < 0.2) {
+    if (dist(rng) < 0) {
         sprintf(sqlcmd, "INSERT INTO transactions (customer, p_name, fornitore, quantity, esito) VALUES (\'%s\', \'%s\', \'%s\', 1, 'REJECTED') ON CONFLICT DO NOTHING", user, product, fornitore);
         printf(BLUE "%s\n" RESET,sqlcmd);
         res = db.ExecSQLcmd(sqlcmd);

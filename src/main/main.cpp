@@ -128,22 +128,21 @@ int main() {
     initializeStreams(c2r);
 
     //Genero i customer
-    for (int i = 0; i <= 90; i++) {
+    for (int i = 0; i <= 20; i++) {
         execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/customer/customer","");
     }
 
     std::vector<std::string> fornitori = {
-        "apple", "samsung" };
-        //, "dell", "hp", "lenovo", "acer", "asus", 
-        //"msi", "sony", "toshiba", "lg", "huawei", "xiaomi", "nokia", "oneplus"
-    //};
+        "apple", "samsung", "dell", "hp", "lenovo", "acer", "asus", 
+        "msi", "sony", "toshiba", "lg", "huawei", "xiaomi", "nokia", "oneplus"
+    };
 
     for (const std::string& fornitore : fornitori) {
         execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/fornitore/fornitore", fornitore.c_str());
     }
 
     //Genero i trasportatori
-    for (int i = 0; i <= 5; i++) {
+    for (int i = 0; i <= 50; i++) {
         execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/trasportatore/trasportatore","");
     }
 
