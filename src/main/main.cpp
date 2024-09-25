@@ -13,6 +13,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <errno.h>
+#include <vector>
+#include <string>
 
 #define C_CHANNEL "stream1"
 #define T_CHANNEL "stream2"
@@ -91,79 +93,13 @@ void execProgram(const char* program, const char* arg) {
     }
 }
 
-void setupDatabase() {
-    try {
-        pqxx::connection C("dbname=ecommerce user=youruser password=yourpassword hostaddr=127.0.0.1 port=5432");
-        pqxx::work W(C);
-
-        W.exec("DROP TABLE IF EXISTS Ordini, Prodotti, Customers, Fornitori, Trasportatori CASCADE");
-        W.exec("CREATE TABLE Customers (customer_id SERIAL PRIMARY KEY, name VARCHAR(100), email VARCHAR(100) UNIQUE, password VARCHAR(100), address VARCHAR(255), phone_number VARCHAR(15))");
-        W.exec("CREATE TABLE Fornitori (fornitore_id SERIAL PRIMARY KEY, company_name VARCHAR(100), email VARCHAR(100) UNIQUE, password VARCHAR(100), address VARCHAR(255), phone_number VARCHAR(15))");
-        W.exec("CREATE TABLE Trasportatori (trasportatore_id SERIAL PRIMARY KEY, company_name VARCHAR(100), email VARCHAR(100) UNIQUE, password VARCHAR(100), address VARCHAR(255), phone_number VARCHAR(15))");
-        W.exec("CREATE TABLE Prodotti (prodotto_id SERIAL PRIMARY KEY, name VARCHAR(100), description TEXT, price DECIMAL(10, 2), fornitore_id INT REFERENCES Fornitori(fornitore_id))");
-        W.exec("CREATE TABLE Ordini (ordine_id SERIAL PRIMARY KEY, customer_id INT REFERENCES Customers(customer_id), prodotto_id INT REFERENCES Prodotti(prodotto_id), quantity INT, order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, status VARCHAR(50))");
-
-        W.commit();
-        std::cout << "Database setup complete." << std::endl;
-    } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
-    }
-}
-
-void testRedisConnection() {
-    redisContext *c = redisConnect("127.0.0.1", 6379);
-    if (c != NULL && c->err) {
-        std::cerr << "Error: " << c->errstr << std::endl;
-    } else {
-        std::cout << "Connected to Redis." << std::endl;
-    }
-    redisFree(c);
-}
-
-/*void simulateOperations() {
-    Customer customer1(1, "John Doe", "john@example.com", "password123", "123 Main St", "555-1234");
-    Customer customer2(2, "Jane Smith", "jane@example.com", "password456", "456 Elm St", "555-5678");
-
-    Fornitore fornitore1(1, "Tech Corp", "tech@example.com", "password789", "789 Oak St", "555-8765");
-    Fornitore fornitore2(2, "Gadget Inc", "gadget@example.com", "password101", "101 Pine St", "555-1011");
-
-    Trasportatore trasportatore1(1, "Fast Delivery", "fast@example.com", "password112", "112 Cedar St", "555-1213");
-    Trasportatore trasportatore2(2, "Quick Ship", "quick@example.com", "password131", "131 Maple St", "555-1415");
-
-    std::cout << "Operations simulation complete." << std::endl;
-}*/
-
-void monitorTransactions() {
-    try {
-        pqxx::connection C("dbname=ecommerce user=youruser password=yourpassword hostaddr=127.0.0.1 port=5432");
-        pqxx::nontransaction N(C);
-        pqxx::result R(N.exec("SELECT COUNT(*) FROM Ordini"));
-
-        if (!R.empty()) {
-            std::cout << "Number of transactions: " << R[0].at(0).as<int>() << std::endl;
-        } else {
-            std::cout << "No transactions found." << std::endl;
-        }
-    } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
-    }
-}
-
-void monitorPerformance() {
-    try {
-        pqxx::connection C("dbname=ecommerce user=youruser password=yourpassword hostaddr=127.0.0.1 port=5432");
-        auto start = std::chrono::high_resolution_clock::now();
-
-        pqxx::nontransaction N(C);
-        pqxx::result R(N.exec("SELECT * FROM Prodotti"));
-
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
-
-        std::cout << "Time taken to fetch products: " << elapsed.count() << " seconds" << std::endl;
-    } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
-    }
+void terminateAllProcesses() {
+    std::cout << "Terminating all processes after 5 minutes..." << std::endl;
+    // Usa il comando `kill` per terminare tutti i processi figli
+    // Assicurati che tutti i processi siano terminati (kill all)
+    system("killall customer");
+    system("killall fornitore");
+    system("killall trasportatore");
 }
 
 int main() {
@@ -191,24 +127,40 @@ int main() {
 
     initializeStreams(c2r);
 
-    execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/customer/customer","");
-    execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/fornitore/fornitore", "apple");
-    execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/fornitore/fornitore", "samsung");
-    execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/trasportatore/trasportatore","");
+    //Genero i customer
+    for (int i = 0; i <= 90; i++) {
+        execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/customer/customer","");
+    }
 
-    //execProgram("../src/customer/customer");
-    //execProgram("../src/fornitore/fornitore");
-    //execProgram("../src/trasportatore/trasportatore");
+    std::vector<std::string> fornitori = {
+        "apple", "samsung" };
+        //, "dell", "hp", "lenovo", "acer", "asus", 
+        //"msi", "sony", "toshiba", "lg", "huawei", "xiaomi", "nokia", "oneplus"
+    //};
 
+    for (const std::string& fornitore : fornitori) {
+        execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/fornitore/fornitore", fornitore.c_str());
+    }
 
-    // Parent process waits for child processes
+    //Genero i trasportatori
+    for (int i = 0; i <= 5; i++) {
+        execProgram("/home/parallels/Documents/IngSoft/BackendEcommerce/src/trasportatore/trasportatore","");
+    }
+
+    // Crea un thread che attende 5 minuti e termina i processi
+    std::thread timeoutThread([]() {
+        std::this_thread::sleep_for(std::chrono::minutes(15));  // 5 minuti di attesa
+        terminateAllProcesses();  // Termina tutti i processi
+    });
+
+    // Processo principale attende la terminazione dei processi figli
     int status;
     while (wait(&status) > 0);
 
-    redisFree(c2r); // Cleanup Redis connection
-    return 0;
+    timeoutThread.join();  // Attende che il thread del timeout termini
 
-    delete[] username;
+    redisFree(c2r); // Cleanup Redis connection
+    delete[] username;  // Cleanup
 
     return 0;
 }

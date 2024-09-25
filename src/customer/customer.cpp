@@ -240,7 +240,7 @@ void Customer::handleState()
     switch (state) {
         case CustomerState::Idle:
             //50% di possibilità di generare un ordine
-            if (dist(rng) < 0.5) {
+            if (dist(rng) < 0.2) {
                 simulateOrder();
             }
             break;

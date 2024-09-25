@@ -12,7 +12,7 @@ con2redis_OBJ = $(wildcard ../con2redis/obj/*.o)
 
 CC    = g++
 
-CFLAGS   =-std=c++17 -g -ggdb -fpermissive -L/usr/local/lib -L../libpqxx-7.9.1/build/src -Wall -I$(IDIR) -I$(RDIR) -I$(DDIR)
+CFLAGS   =-std=c++17 -Os -ffast-math -fpermissive -L/usr/local/lib -L../libpqxx-7.9.1/build/src -Wall -I$(IDIR) -I$(RDIR) -I$(DDIR)
 TARGET   = ./bin/run
 CUSTOMER = ./src/customer/customer
 FORNITORE = ./src/fornitore/fornitore
